@@ -3,58 +3,56 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Speckle 3D Viewer</title>
+  <title>Speckle 3D Viewer - Pavimentos</title>
   <style>
-    html, body {
-      margin: 0;
-      height: 100%;
-      overflow: hidden;
-      background-color: #111;
-    }
-    #viewer {
-      width: 100%;
-      height: 100vh;
-    }
+    html, body { margin: 0; height: 100%; overflow: hidden; background: #111; }
+    #viewer { width: 100%; height: 100vh; }
   </style>
-  <script type="module">
-  import Viewer from "https://unpkg.com/@speckle/viewer@2.15.3/build/speckle-viewer.js";
-
-  async function initViewer() {
-    const container = document.getElementById("viewer");
-    const viewer = new Viewer(container);
-    await viewer.init();
-
-    const params = new URLSearchParams(window.location.search);
-    const projectId = params.get("project") || "049319ff40";
-    const modelId = params.get("model") || "ddfe770f82";
-    const pavimento = params.get("pavimento");
-
-    const modelUrl = https://app.speckle.systems/projects/${projectId}/models/${modelId};
-    await viewer.loadObject(modelUrl);
-    viewer.resize();
-
-    if (pavimento) {
-      console.log("Filtrando por pavimento:", pavimento);
-      try {
-        const objects = await viewer.getObjects();
-        const filtrados = objects.filter(o =>
-          o.raw?.properties?.PAVIMENTO?.toUpperCase() === pavimento.toUpperCase()
-        );
-        if (filtrados.length > 0) {
-          viewer.isolateObjects(filtrados.map(o => o.id));
-        } else {
-          console.warn("Nenhum objeto com PAVIMENTO =", pavimento);
-        }
-      } catch (e) {
-        console.error("Erro ao filtrar:", e);
-      }
-    }
-  }
-
-  window.onload = initViewer;
-</script>
 </head>
 <body>
   <div id="viewer"></div>
+
+  <script type="module">
+    import Viewer from "https://unpkg.com/@speckle/viewer@2.15.3/build/speckle-viewer.js";
+
+    async function startViewer() {
+      const container = document.getElementById("viewer");
+      const viewer = new Viewer(container);
+
+      await viewer.init();
+
+      const params = new URLSearchParams(window.location.search);
+      const projectId = params.get("project") || "049319ff40";
+      const modelId = params.get("model") || "ddfe770f82";
+      const pavimento = params.get("pavimento");
+
+      const modelUrl = https://app.speckle.systems/projects/${projectId}/models/${modelId};
+
+      console.log("Carregando modelo:", modelUrl);
+      await viewer.loadObject(modelUrl);
+
+      if (pavimento) {
+        console.log("Filtrando por pavimento:", pavimento);
+        try {
+          const objects = await viewer.getObjects();
+          const filtrados = objects.filter(o =>
+            o.raw?.properties?.PAVIMENTO?.toUpperCase() === pavimento.toUpperCase()
+          );
+
+          if (filtrados.length > 0) {
+            viewer.isolateObjects(filtrados.map(o => o.id));
+          } else {
+            console.warn("Nenhum objeto encontrado com PAVIMENTO =", pavimento);
+          }
+        } catch (e) {
+          console.error("Erro ao aplicar filtro:", e);
+        }
+      }
+
+      viewer.resize();
+    }
+
+    window.addEventListener("load", startViewer);
+  </script>
 </body>
 </html>
