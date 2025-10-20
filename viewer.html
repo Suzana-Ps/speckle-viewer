@@ -17,33 +17,42 @@
     }
   </style>
   <script type="module">
-    import Viewer from "https://unpkg.com/@speckle/viewer@2.15.3/build/speckle-viewer.js";
+  import Viewer from "https://unpkg.com/@speckle/viewer@2.15.3/build/speckle-viewer.js";
 
+  async function initViewer() {
     const container = document.getElementById("viewer");
     const viewer = new Viewer(container);
+    await viewer.init();
 
-    async function initViewer() {
-      await viewer.init();
-      const urlParams = new URLSearchParams(window.location.search);
-      const modelId = urlParams.get("model") || "ddfe770f82";
-      const projectId = urlParams.get("project") || "049319ff40";
-      const idsParam = urlParams.get("ids"); // lista de IDs separados por vírgula
-      const ids = idsParam ? idsParam.split(",") : [];
+    const params = new URLSearchParams(window.location.search);
+    const projectId = params.get("project") || "049319ff40";
+    const modelId = params.get("model") || "ddfe770f82";
+    const pavimento = params.get("pavimento");
 
-      const modelUrl = https://app.speckle.systems/projects/${projectId}/models/${modelId};
-      await viewer.loadObject(modelUrl);
+    const modelUrl = https://app.speckle.systems/projects/${projectId}/models/${modelId};
+    await viewer.loadObject(modelUrl);
+    viewer.resize();
 
-      // Se tiver IDs na URL, isola apenas esses
-      if (ids.length > 0) {
-        console.log("Isolando elementos:", ids);
-        viewer.isolateObjects(ids);
+    if (pavimento) {
+      console.log("Filtrando por pavimento:", pavimento);
+      try {
+        const objects = await viewer.getObjects();
+        const filtrados = objects.filter(o =>
+          o.raw?.properties?.PAVIMENTO?.toUpperCase() === pavimento.toUpperCase()
+        );
+        if (filtrados.length > 0) {
+          viewer.isolateObjects(filtrados.map(o => o.id));
+        } else {
+          console.warn("Nenhum objeto com PAVIMENTO =", pavimento);
+        }
+      } catch (e) {
+        console.error("Erro ao filtrar:", e);
       }
-
-      viewer.resize();
     }
+  }
 
-    window.onload = initViewer;
-  </script>
+  window.onload = initViewer;
+</script>
 </head>
 <body>
   <div id="viewer"></div>
