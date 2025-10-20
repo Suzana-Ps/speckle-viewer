@@ -11,22 +11,41 @@
       overflow: hidden;
       background-color: #111;
     }
-    iframe {
-      border: none;
+    #viewer {
       width: 100%;
-      height: 100%;
+      height: 100vh;
     }
   </style>
+  <script type="module">
+    import Viewer from "https://unpkg.com/@speckle/viewer@2.15.3/build/speckle-viewer.js";
+
+    const container = document.getElementById("viewer");
+    const viewer = new Viewer(container);
+
+    async function initViewer() {
+      await viewer.init();
+      const urlParams = new URLSearchParams(window.location.search);
+      const modelId = urlParams.get("model") || "ddfe770f82";
+      const projectId = urlParams.get("project") || "049319ff40";
+      const idsParam = urlParams.get("ids"); // lista de IDs separados por vírgula
+      const ids = idsParam ? idsParam.split(",") : [];
+
+      const modelUrl = https://app.speckle.systems/projects/${projectId}/models/${modelId};
+      await viewer.loadObject(modelUrl);
+
+      // Se tiver IDs na URL, isola apenas esses
+      if (ids.length > 0) {
+        console.log("Isolando elementos:", ids);
+        viewer.isolateObjects(ids);
+      }
+
+      viewer.resize();
+    }
+
+    window.onload = initViewer;
+  </script>
 </head>
 <body>
-  <!-- Substitua o Stream ID abaixo pelo seu -->
-  <iframe 
-    title="Speckle"
-    src="https://app.speckle.systems/projects/049319ff40/models/ddfe770f82?embedToken=1e0116457d45d42ffd0c1e4ba79c0d642c58d1e4a6#embed=%7B%22isEnabled%22%3Atrue%7D"
-    width="100%"
-    height="100%"
-    frameborder="0"
-    allowfullscreen>
-</iframe>
+  <div id="viewer"></div>
 </body>
 </html>
