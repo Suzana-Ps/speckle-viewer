@@ -3,58 +3,17 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Speckle Viewer — Com Token</title>
+  <title>Speckle Embed</title>
   <style>
     html, body { margin:0; height:100%; overflow:hidden; background:#111; }
-    #renderer { width:100%; height:100vh; }
+    iframe { border:0; width:100%; height:100vh; }
   </style>
 </head>
 <body>
-  <div id="renderer"></div>
-
-  <script type="module">
-    import {
-      Viewer,
-      CameraController,
-      UrlHelper,
-      SpeckleLoader
-    } from "https://unpkg.com/@speckle/viewer@2.22.0/build/speckle-viewer.js";
-
-    // 👉 Cole aqui seu embedToken copiado do Speckle
-    const EMBED_TOKEN = "a84afc7228d682bd761ff36a7ef57467b2bb083266";
-
-    // ids do seu projeto/modelo
-    const PROJECT_ID = "049319ff40";
-    const MODEL_ID   = "ddfe770f82";
-
-    // Função auxiliar para anexar o token como query param às URLs
-    function withToken(url) {
-      return url + (url.includes("?") ? "&" : "?") + "embedToken=" + encodeURIComponent(EMBED_TOKEN);
-    }
-
-    async function start() {
-      const container = document.getElementById("renderer");
-      const viewer = new Viewer(container);
-      await viewer.init();
-      viewer.createExtension(CameraController);
-
-      // Pega as URLs do modelo
-      const baseUrl = https://app.speckle.systems/projects/${PROJECT_ID}/models/${MODEL_ID};
-      const urls = await UrlHelper.getResourceUrls(baseUrl);
-
-      // Acrescenta o embedToken em todas as URLs antes de carregar
-      const urlsWithToken = urls.map(withToken);
-
-      for (const url of urlsWithToken) {
-        const loader = new SpeckleLoader(viewer.getWorldTree(), url, "");
-        await viewer.loadObject(loader, true);
-      }
-
-      viewer.resize();
-      console.log("✅ Modelo carregado com embedToken.");
-    }
-
-    window.addEventListener("load", start);
-  </script>
+  <iframe
+    title="Speckle"
+    src="SUA_URL_DE_EMBED_EXATA"
+    allowfullscreen>
+  </iframe>
 </body>
 </html>
