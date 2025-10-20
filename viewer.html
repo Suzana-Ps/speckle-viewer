@@ -3,60 +3,50 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Speckle Viewer Interativo</title>
+  <title>Speckle Viewer — Básico</title>
   <style>
-    html, body { margin:0; height:100%; background:#111; overflow:hidden; }
-    #viewer { width:100%; height:100%; }
-    #info { position:absolute; top:10px; left:10px; color:#fff; z-index:10; font-family:sans-serif; }
+    html, body { margin:0; height:100%; overflow:hidden; background:#111; }
+    #renderer { width:100%; height:100vh; }
   </style>
 </head>
 <body>
-  <div id="info">Carregando modelo...</div>
-  <div id="viewer"></div>
+  <div id="renderer"></div>
 
   <script type="module">
-    import { Viewer, UrlHelper, SpeckleLoader } from "https://unpkg.com/@speckle/viewer@2.22.0/build/speckle-viewer.js";
+    import {
+      Viewer,
+      CameraController,
+      UrlHelper,
+      SpeckleLoader
+    } from "https://unpkg.com/@speckle/viewer@2.22.0/build/speckle-viewer.js";
 
-    async function startViewer() {
-      const container = document.getElementById("viewer");
+    async function start() {
+      const container = document.getElementById("renderer");
       const viewer = new Viewer(container);
       await viewer.init();
 
-      const urlParams = new URLSearchParams(window.location.search);
-      const projectId = urlParams.get("project") || "049319ff40";
-      const modelId = urlParams.get("model")   || "ddfe770f82";
-      const pavimento = urlParams.get("pavimento");
+      // Controles de câmera (recomendado pelo exemplo oficial)
+      viewer.createExtension(CameraController);
 
-      const modelUrl = https://app.speckle.systems/projects/${projectId}/models/${modelId};
-      const urls = await UrlHelper.getResourceUrls(modelUrl);
+      // IDs do seu projeto/modelo
+      const projectId = "049319ff40";
+      const modelId   = "ddfe770f82";
+
+      // Carregar o modelo usando UrlHelper + SpeckleLoader (padrão oficial)
+      const urls = await UrlHelper.getResourceUrls(
+        https://app.speckle.systems/projects/${projectId}/models/${modelId}
+      );
 
       for (const url of urls) {
         const loader = new SpeckleLoader(viewer.getWorldTree(), url, "");
         await viewer.loadObject(loader, true);
       }
 
-      document.getElementById("info").innerText = "Modelo carregado.";
-
-      // Filtro de PAVIMENTO
-      if (pavimento) {
-        const upper = pavimento.toUpperCase();
-        const all = viewer.getWorldTree().findAll(n => {
-          const props = n.model?.raw?.properties;
-          const pav = (props?.PAVIMENTO || props?.pavimento || "").toString().toUpperCase();
-          return pav === upper;
-        });
-        if (all.length > 0) {
-          viewer.isolateObjects(all.map(n => n.model.id));
-          document.getElementById("info").innerText = Pavimento: ${pavimento};
-        } else {
-          document.getElementById("info").innerText = Nenhum elemento com PAVIMENTO=${pavimento};
-        }
-      }
-
       viewer.resize();
+      console.log("✅ Modelo carregado com o exemplo básico.");
     }
 
-    window.addEventListener("load", startViewer);
+    window.addEventListener("load", start);
   </script>
 </body>
 </html>
