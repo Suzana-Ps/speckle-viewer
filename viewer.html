@@ -3,49 +3,53 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Speckle 3D Viewer - Pavimentos</title>
+  <title>Speckle Viewer Interativo</title>
   <style>
-    html, body { margin: 0; height: 100%; overflow: hidden; background: #111; }
-    #viewer { width: 100%; height: 100vh; }
+    html, body { margin:0; height:100%; background:#111; overflow:hidden; }
+    #viewer { width:100%; height:100%; }
+    #info { position:absolute; top:10px; left:10px; color:#fff; z-index:10; font-family:sans-serif; }
   </style>
 </head>
 <body>
+  <div id="info">Carregando modelo...</div>
   <div id="viewer"></div>
 
   <script type="module">
-    import Viewer from "https://app.speckle.systems/projects/049319ff40/models/ddfe770f82";
+    import { Viewer, UrlHelper, SpeckleLoader } from "https://unpkg.com/@speckle/viewer@2.22.0/build/speckle-viewer.js";
 
     async function startViewer() {
       const container = document.getElementById("viewer");
       const viewer = new Viewer(container);
-
       await viewer.init();
 
-      const params = new URLSearchParams(window.location.search);
-      const projectId = params.get("project") || "049319ff40";
-      const modelId = params.get("model") || "ddfe770f82";
-      const pavimento = params.get("pavimento");
+      const urlParams = new URLSearchParams(window.location.search);
+      const projectId = urlParams.get("project") || "049319ff40";
+      const modelId = urlParams.get("model")   || "ddfe770f82";
+      const pavimento = urlParams.get("pavimento");
 
       const modelUrl = https://app.speckle.systems/projects/${projectId}/models/${modelId};
+      const urls = await UrlHelper.getResourceUrls(modelUrl);
 
-      console.log("Carregando modelo:", modelUrl);
-      await viewer.loadObject(modelUrl);
+      for (const url of urls) {
+        const loader = new SpeckleLoader(viewer.getWorldTree(), url, "");
+        await viewer.loadObject(loader, true);
+      }
 
+      document.getElementById("info").innerText = "Modelo carregado.";
+
+      // Filtro de PAVIMENTO
       if (pavimento) {
-        console.log("Filtrando por pavimento:", pavimento);
-        try {
-          const objects = await viewer.getObjects();
-          const filtrados = objects.filter(o =>
-            o.raw?.properties?.PAVIMENTO?.toUpperCase() === pavimento.toUpperCase()
-          );
-
-          if (filtrados.length > 0) {
-            viewer.isolateObjects(filtrados.map(o => o.id));
-          } else {
-            console.warn("Nenhum objeto encontrado com PAVIMENTO =", pavimento);
-          }
-        } catch (e) {
-          console.error("Erro ao aplicar filtro:", e);
+        const upper = pavimento.toUpperCase();
+        const all = viewer.getWorldTree().findAll(n => {
+          const props = n.model?.raw?.properties;
+          const pav = (props?.PAVIMENTO || props?.pavimento || "").toString().toUpperCase();
+          return pav === upper;
+        });
+        if (all.length > 0) {
+          viewer.isolateObjects(all.map(n => n.model.id));
+          document.getElementById("info").innerText = Pavimento: ${pavimento};
+        } else {
+          document.getElementById("info").innerText = Nenhum elemento com PAVIMENTO=${pavimento};
         }
       }
 
